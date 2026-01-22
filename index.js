@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Questions
-const questions = JSON.parse(fs.readFileSync("question.json", "utf8"));
+let questions = JSON.parse(fs.readFileSync("question.json", "utf8"));
 let question = {};
 let players = [
   "Joueur 1",
@@ -33,9 +33,13 @@ let isFirst = false;
 let isStart = false;
 
 function getRandomQuestion() {
+  if(questions.length < 2) questions = JSON.parse(fs.readFileSync("question.json", "utf8"));
   const index = Math.floor(Math.random() * questions.length);
-  return questions[index];
+  const q = questions[index];
+  questions.splice(index, 1); // retire la question
+  return q;
 }
+
 
 // --- Pages ---
 app.get("/", (req, res) => {
@@ -63,7 +67,9 @@ app.post("/addpart", (req, res) => {
   players[3] = req.body.j4;
   players[4] = req.body.j5;
   broadcast(`PLAYERS:${JSON.stringify(players)}`);
-  res.render("anim", { players, question, userq: userquestion });
+  //res.render("anim", { players, question, userq: userquestion });
+  res.redirect("/anim");
+
 });
 
 app.get("/newquestion", (req, res) => {
@@ -73,7 +79,9 @@ app.get("/newquestion", (req, res) => {
 app.post("/addquestion", (req, res) => {
   userquestion.push(req.body);
   broadcast(`USERQ:${JSON.stringify(userquestion)}`);
-  res.render("newquestion");
+  //res.render("newquestion");
+  res.redirect("/newquestion");
+
 });
 
 // --- WebSocket helpers ---
@@ -119,7 +127,7 @@ wss.on("connection", (ws, req) => {
       isStart = false;
       question = getRandomQuestion();
       broadcast(`QUESTION:${JSON.stringify(question)}`);
-      broadcast("RESTART");
+      //broadcast("RESTART");
       return;
     }
 
