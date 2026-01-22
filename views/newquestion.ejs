@@ -160,17 +160,6 @@
 		 <div class="buzzer red" onclick="location.reload()">Annuler</div>
 	   
 <script>
-			 // Connexion WebSocket (cohérence avec les autres pages)
-			 const socket = new WebSocket("ws://piquizz.local:3000");
-		 
-			 socket.onopen = () => {
-				 console.log("WS connecté (newquestion)");
-			 };
-		 
-			 socket.onmessage = (event) => {
-				 console.log("WS reçu :", event.data);
-				 // Cette page n'a pas besoin de gérer des messages
-			 };
 		 
 			 // Envoi du formulaire
 			 function sendForm() { 

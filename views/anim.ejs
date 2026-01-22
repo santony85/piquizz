@@ -96,6 +96,7 @@
 	.blue { border-color: #6bb5ff; }
 	.white { border-color: #cccccc; }
 	.yellow { border-color: #ffe28a; }
+	.black { border-color: #000000; }
 
 	@keyframes wiiBounce {
 		0%   { transform: scale(1); }
@@ -313,9 +314,9 @@
 	<div id="reponse"><%= question.reponse%></div>
 
 
-	<div class="buzzer red" id="timerjoueur">20</div>
-	<div class="buzzer blue" onclick="anim('continue')">Re/Start</div>
-	<div class="buzzer green" onclick="anim('next')">Next</div>
+	<div class="buzzer green" id="timerjoueur">20</div>
+	<div class="buzzer white" onclick="anim('continue')">Re/Start</div>
+	<div class="buzzer blue" onclick="anim('next')">Next</div>
 	<div class="buzzer yellow" onclick="anim('new')">New</div>
 
 	
@@ -420,8 +421,14 @@
 			if (msg.startsWith("TIMER:")) {
 				const val = parseInt(msg.split(":")[1]);
 				if (!isNaN(val)) {
-					if (val === 0) enastart = 0;
-					document.getElementById("timerjoueur").innerHTML = val;
+					if (val === 0){
+					  enastart = 0;
+					  document.getElementById("timerjoueur").innerHTML = "FIN";
+					  document.getElementById("timerjoueur").classList.replace("green", "red");
+
+					  buzz(0);	
+					} 
+					else document.getElementById("timerjoueur").innerHTML = val;
 				}
 				return;
 			}
@@ -458,6 +465,7 @@
 				send("ANIM:NEXT");
 				resetBuzzersAnimations();
 				document.getElementById("timerjoueur").innerHTML = "20";
+				document.getElementById("timerjoueur").classList.replace("red", "green");
 			}
 			else if(txt === "new"){
 				send("ANIM:NEW");

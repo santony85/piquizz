@@ -157,7 +157,8 @@ let players = ["<%=players[0] %>","<%=players[1] %>","<%=players[2] %>","<%=play
 
 const socket = new WebSocket("ws://piquizz.local:3000");
 
-let timeLeft = 20;
+let timersec = 20;
+let timeLeft = timersec;
 let timerInterval = null;
 
 const timerDiv = document.getElementById("timer");
@@ -187,7 +188,7 @@ socket.onmessage = (event) => {
         resetBuzzersAnimations();
         stopTimer();
         timerDiv.style.background = "#ffffff";
-        timeLeft = 20;
+        timeLeft = timersec;
         timerDiv.textContent = timeLeft;
         return;
     }

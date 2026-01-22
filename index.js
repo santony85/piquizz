@@ -127,7 +127,7 @@ wss.on("connection", (ws, req) => {
       isStart = false;
       question = getRandomQuestion();
       broadcast(`QUESTION:${JSON.stringify(question)}`);
-      //broadcast("RESTART");
+      broadcast("RESTART");
       return;
     }
 
