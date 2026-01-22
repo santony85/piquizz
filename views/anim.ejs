@@ -319,170 +319,205 @@
 	<div class="buzzer yellow" onclick="anim('new')">New</div>
 
 	
-<script src="/socket.io/socket.io.js"></script>
-
-
 <script>
-    let players= ["<%=players[0] %>","<%=players[1] %>","<%=players[2] %>","<%=players[3] %>","<%=players[4] %>"];
-	const socket = io("http://piquizz.local:3000");
-
-	let userq = <%- JSON.stringify(userq) %>; 
-	console.log(userq);
+		// -----------------------------
+		// VARIABLES INITIALES
+		// -----------------------------
+		let players = ["<%=players[0] %>","<%=players[1] %>","<%=players[2] %>","<%=players[3] %>","<%=players[4] %>"];
+		let userq = <%- JSON.stringify(userq) %>;
 	
-	let questions=[];
-	let isStart=0;
+		let enastart = 0;
 	
-	const modal = document.getElementById("modal");
-	const openBtn = document.getElementById("openModal");
-	const closeBtn = document.getElementById("closeModal");
-	const list = document.getElementById("questionList");
+		const socket = new WebSocket("ws://piquizz.local:3000");
 	
-	// Ouvrir la modale
-	openBtn.onclick = () => {
-      const list = document.getElementById("questionList");
-	  list.innerHTML = "";
-	
-	  userq.forEach((q , index) => {
-	    console.log(index);
-	    const li = document.createElement("li");
-        li.innerHTML = `
-		  <div onclick="liclick('${index}')">
-			<div class="wii-cat">${q.categorie}</div>
-			<div class="wii-question">${q.question}</div>
-			<div class="wii-answer">${q.reponse}</div>
-		  </div>
-		`;
-
-	    list.appendChild(li);
-	  });
-	  modal.style.display = "flex";
-	};
-	
-	// Fermer la modale
-	closeBtn.onclick = () => {
-	  modal.style.display = "none";
-	};
-	
-	// Fermer en cliquant en dehors
-	window.onclick = (e) => {
-	  if (e.target === modal) {
-		modal.style.display = "none";
-	  }
-	};
-
-
-	socket.on("message", data => {
-		console.log("Message reçu :", data);
-	});
-	
-	socket.on("question", data => {
-		console.log("Question reçu :", data);
-		document.getElementById("question").innerHTML = data.categorie+" : <br><br>"+data.question;
-		document.getElementById("reponse").innerHTML = data.reponse;
-	});
-
-	socket.on("time", data => {
-		console.log("Message reçu :", data);
-	});
-	
-	socket.on("winner", data => {
-		console.log("Message reçu winner:", players[data-1]);
-		document.getElementById("timerjoueur").innerHTML=players[data-1];
-		buzz(0);
-	});
-	
-	socket.on("timer", data => {
-		console.log("Message reçu :", data);
-        document.getElementById("timerjoueur").innerHTML= data;
-	});
-	
-	socket.on("userquestion", data => {
-		console.log("Message reçu :", data);
-		updateBadge(data.length) 
-		userq=data;
-        //updateBadge(data.length);
+		const modal = document.getElementById("modal");
+		const openBtn = document.getElementById("openModal");
+		const closeBtn = document.getElementById("closeModal");
 		const list = document.getElementById("questionList");
-		  list.innerHTML = "";
-		
-		  userq.forEach((q , index) => {
-			console.log(index);
-			const li = document.createElement("li");
-			li.innerHTML = `
-			  <div onclick="liclick('${index}')">
-				<div class="wii-cat">${q.categorie}</div>
-				<div class="wii-question">${q.question}</div>
-				<div class="wii-answer">${q.reponse}</div>
-			  </div>
-			`;
-		
-			list.appendChild(li);
-		  });
-		  
-		
-	});
 	
-	function liclick(id){
-		console.log("Message reçu :", id);
-		console.log(userq[id]);
-		modal.style.display = "none";
-		socket.emit("userq", id);
-	}
+		// -----------------------------
+		// OUVERTURE MODALE
+		// -----------------------------
+		openBtn.onclick = () => {
+			list.innerHTML = "";
 	
-	function anim(txt) {
-		if(txt === "continue"){
-		  socket.emit("anim",txt);
-		  resetBuzzersAnimations();	
+			userq.forEach((q, index) => {
+				const li = document.createElement("li");
+				li.innerHTML = `
+					<div onclick="liclick('${index}')">
+						<div class="wii-cat">${q.categorie}</div>
+						<div class="wii-question">${q.question}</div>
+						<div class="wii-answer">${q.reponse}</div>
+					</div>
+				`;
+				list.appendChild(li);
+			});
+	
+			modal.style.display = "flex";
+		};
+	
+		closeBtn.onclick = () => modal.style.display = "none";
+	
+		window.onclick = (e) => {
+			if (e.target === modal) modal.style.display = "none";
+		};
+	
+		// -----------------------------
+		// ENVOI MESSAGE WS
+		// -----------------------------
+		function send(msg) {
+			if (socket.readyState === WebSocket.OPEN) {
+				socket.send(msg);
+			}
 		}
-		else if(txt === "next"){
-		  socket.emit("anim",txt);
-		  resetBuzzersAnimations();	
-		}
-		
-	}
-
-	function buzz(playerIndex) {
-		const buzzers = document.querySelectorAll(".buzzer");
-		const buzzer = buzzers[playerIndex];
-		//socket.emit("message", { player: playerIndex });
-		// Animation rebond Wii
-		buzzer.classList.remove("bounce");
-		void buzzer.offsetWidth; // reset animation
-		buzzer.classList.add("bounce");
-		setWinner(playerIndex);
-	}
-
-	function resetBuzzersAnimations() {
-		const buzzers = document.querySelectorAll(".buzzer");
-		buzzers.forEach(b => {
-			b.classList.remove("bounce");
-			b.classList.remove("winner");
-			b.classList.remove("active");
-		});
-	}
 	
-	function updateBadge(count) {
-	  const badge = document.querySelector(".badge");
-	  if (count > 0) {
-		badge.textContent = count;
-		badge.classList.remove("hidden");
-	  } else {
-		badge.classList.add("hidden");
-	  }
-	}
+		// -----------------------------
+		// RECEPTION WS
+		// -----------------------------
+		socket.onmessage = (event) => {
+			const msg = event.data;
+			console.log("WS reçu :", msg);
+	
+			// WINNER:x
+			if (msg.startsWith("WINNER:")) {
+				const val = parseInt(msg.split(":")[1]);
+				if (!isNaN(val) && val !== 0) {
+					document.getElementById("timerjoueur").innerHTML = players[val - 1];
+					buzz(0);
+				} else {
+					resetBuzzersAnimations();
+					enastart = 1;
+				}
+				return;
+			}
+	
+			// QUESTION:{...}
+			if (msg.startsWith("QUESTION:")) {
+				const json = msg.substring(9);
+				const data = JSON.parse(json);
+	
+				enastart = 1;
+				document.getElementById("question").innerHTML =
+					data.categorie + " : <br><br>" + data.question;
+				document.getElementById("reponse").innerHTML = data.reponse;
+				return;
+			}
+	
+			// RESTART
+			if (msg === "RESTART") {
+				resetBuzzersAnimations();
+				enastart = 1;
+				return;
+			}
+	
+			// RESTART_TIMER
+			if (msg === "RESTART_TIMER") {
+				resetBuzzersAnimations();
+				return;
+			}
+	
+			// TIMER:x
+			if (msg.startsWith("TIMER:")) {
+				const val = parseInt(msg.split(":")[1]);
+				if (!isNaN(val)) {
+					if (val === 0) enastart = 0;
+					document.getElementById("timerjoueur").innerHTML = val;
+				}
+				return;
+			}
+	
+			// PLAYERS:[...]
+			if (msg.startsWith("PLAYERS:")) {
+				players = JSON.parse(msg.substring(8));
+				return;
+			}
+	
+			// USERQ:[...]
+			if (msg.startsWith("USERQ:")) {
+				userq = JSON.parse(msg.substring(6));
+				updateBadge(userq.length);
+				refreshUserQList();
+				return;
+			}
+		};
+	
+		// -----------------------------
+		// ACTIONS
+		// -----------------------------
+		function liclick(id) {
+			modal.style.display = "none";
+			send("USERQ:" + id);
+		}
+	
+		function anim(txt) {
+			if (txt === "continue" && enastart) {
+				send("ANIM:CONTINUE");
+				resetBuzzersAnimations();
+			}
+			else if (txt === "next") {
+				send("ANIM:NEXT");
+				resetBuzzersAnimations();
+				document.getElementById("timerjoueur").innerHTML = "20";
+			}
+			else if(txt === "new"){
+				send("ANIM:NEW");
+				window.location.replace("/newpart");
+			}
+		}
+	
+		function buzz(playerIndex) {
+			const buzzers = document.querySelectorAll(".buzzer");
+			const buzzer = buzzers[playerIndex];
+	
+			buzzer.classList.remove("bounce");
+			void buzzer.offsetWidth;
+			buzzer.classList.add("bounce");
+	
+			setWinner(playerIndex);
+		}
+	
+		function resetBuzzersAnimations() {
+			const buzzers = document.querySelectorAll(".buzzer");
+			buzzers.forEach(b => {
+				b.classList.remove("bounce");
+				b.classList.remove("winner");
+				b.classList.remove("active");
+			});
+		}
+	
+		function setWinner(playerIndex) {
+			const buzzers = document.querySelectorAll(".buzzer");
+			buzzers.forEach(b => b.classList.remove("winner"));
+			buzzers[playerIndex].classList.add("winner");
+		}
+	
+		function updateBadge(count) {
+			const badge = document.querySelector(".badge");
+			if (count > 0) {
+				badge.textContent = count;
+				badge.classList.remove("hidden");
+			} else {
+				badge.classList.add("hidden");
+			}
+		}
+	
+		function refreshUserQList() {
+			list.innerHTML = "";
+			userq.forEach((q, index) => {
+				const li = document.createElement("li");
+				li.innerHTML = `
+					<div onclick="liclick('${index}')">
+						<div class="wii-cat">${q.categorie}</div>
+						<div class="wii-question">${q.question}</div>
+						<div class="wii-answer">${q.reponse}</div>
+					</div>
+				`;
+				list.appendChild(li);
+			});
+		}
+	
+	</script>
 
-
-	function setWinner(playerIndex) {
-		const buzzers = document.querySelectorAll(".buzzer");
-		// On enlève le clignotement partout
-		buzzers.forEach(b => b.classList.remove("winner"));
-		// On active le clignotement sur le gagnant
-		buzzers[playerIndex].classList.add("winner");
-	}
-
-//updateBadge(0);
-
-
-</script>
 
 </body>
 </html>

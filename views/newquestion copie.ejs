@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Piquizz – Style Wii</title>
+
+<style>
+	html, body {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		font-family: "Helvetica Neue", Arial, sans-serif;
+		background: linear-gradient(#f4f9ff, #c2d4e6);
+		color: #333;
+		display: flex;
+		flex-direction: column;
+		margin-top: 2%;
+	}
+
+	input,textarea {
+		height: 100%;
+		width: 100%;
+		font-size: 3rem;
+	}
+	
+	form {
+		height: 50%;
+	}
+
+	/* QUESTION */
+	.reponse {
+		margin: 0 auto;
+		padding: 1.5rem;
+		width: 80%;
+		height: 10%;
+		font-size: 4rem;
+		background: white;
+		border-radius: 2rem;
+		box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+		margin-top: 2%;
+	}
+	
+	.question {
+		margin: 0 auto;
+		padding: 1.5rem;
+		width: 80%;
+		height: 60%;
+		font-size: 4rem;
+		background: white;
+		border-radius: 2rem;
+		box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.15);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+		margin-top: 2%;
+	}
+
+	/* BUZZERS */
+	.buzzers {
+		display: flex;
+		justify-content: center;
+		gap: 2rem;
+		margin-bottom: 3rem;
+		flex-wrap: wrap;
+		margin-top: 2%;
+	}
+
+	.buzzer {
+		width: 80%;
+		height: 10%;
+		border-radius: 2rem;
+		background: white;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 2.2rem;
+		font-weight: bold;
+		color: #333;
+		cursor: pointer;
+		box-shadow: 0 0.6rem 1.5rem rgba(0,0,0,0.2);
+		transition: transform 0.2s, box-shadow 0.2s;
+		border: 1rem solid transparent;
+		display: flex;
+		justify-content: center;
+		gap: 2rem;
+		margin-bottom: 3rem;
+		flex-wrap: wrap;
+		margin: 0 auto;
+		margin-top: 3%;
+		
+	}
+
+	.buzzer:hover {
+		transform: scale(1.08);
+		box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.25);
+	}
+
+	.red { border-color: #ff6b6b; }
+	.green { border-color: #6bcf8b; }
+	.blue { border-color: #6bb5ff; }
+	.white { border-color: #cccccc; }
+	.yellow { border-color: #ffe28a; }
+
+	@keyframes wiiBounce {
+		0%   { transform: scale(1); }
+		30%  { transform: scale(1.15); }
+		60%  { transform: scale(0.95); }
+		100% { transform: scale(1); }
+	}
+
+	.bounce {
+		animation: wiiBounce 0.4s ease-out;
+	}
+	@keyframes wiiBlink {
+		0%   { opacity: 1; }
+		50%  { opacity: 0.3; }
+		100% { opacity: 1; }
+	}
+
+	.winner {
+		animation: wiiBlink 0.8s ease-in-out infinite;
+	}
+	@keyframes chronoSpin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+
+/* Pulsation Wii */
+@keyframes wiiPulse {
+	0%   { transform: scale(1); }
+	50%  { transform: scale(1.15); background: #ffb3b3; }
+	100% { transform: scale(1); }
+}
+
+.timer-end {
+	animation: wiiPulse 0.6s ease-out 3;
+}
+
+
+</style>
+</head>
+
+<body>
+
+
+   <form id="myForm" action="addquestion" method="POST">
+	  <div class="reponse"><input type="text" name="categorie" placeholder="Nom"></div>
+	  <div class="question"><textarea name="question" rows="4" placeholder="Question"></textarea></div>
+	  <div class="reponse"><input type="text" name="reponse" placeholder="Reponse"></div>
+   </form>
+	   
+	   
+		 <div class="buzzer yellow" onclick="sendForm()">Nouveau</div>
+		 <div class="buzzer red" onclick="location.reload()">Annuler</div>
+	   
+<script src="/socket.io/socket.io.js"></script>
+
+
+<script>
+
+	const socket = io("http://piquizz.local:3000");
+
+	let timeLeft = 20;
+	let timerInterval = null;
+
+	const timerDiv = document.getElementById("timer");
+ 
+ 
+ function sendForm() { 
+	 document.getElementById("myForm").submit(); 
+ }
+
+
+
+
+
+
+</script>
+
+</body>
+</html>

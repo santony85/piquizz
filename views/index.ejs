@@ -147,127 +147,162 @@
     </div>
 
 </div>
-<script src="/socket.io/socket.io.js"></script>
+
 
 
 <script>
 
-    let players= ["<%=players[0] %>","<%=players[1] %>","<%=players[2] %>","<%=players[3] %>","<%=players[0] %>"];
-    
-    const socket = io("http://piquizz.local:3000");
+let players = ["<%=players[0] %>","<%=players[1] %>","<%=players[2] %>","<%=players[3] %>","<%=players[4] %>"];
 
-    let timeLeft = 20;
-    let timerInterval = null;
+const socket = new WebSocket("ws://piquizz.local:3000");
 
-    const timerDiv = document.getElementById("timer");
+let timeLeft = 20;
+let timerInterval = null;
 
-    socket.on("message", data => {
-        console.log("Message reçu :", data);
-    });
-    
-    socket.on("question", data => {
-        console.log("Question reçu :", data);
-        document.getElementById("question").innerHTML = data.categorie+" : <br><br>"+data.question;
+const timerDiv = document.getElementById("timer");
+
+// ----------------------
+// Réception WebSocket
+// ----------------------
+socket.onmessage = (event) => {
+    const msg = event.data;
+    console.log("WS reçu :", msg);
+
+    // WINNER:2
+    if (msg.startsWith("WINNER:")) {
+        const val = parseInt(msg.split(":")[1]);
+        if (!isNaN(val)) buzz(val - 1);
+        return;
+    }
+
+    // QUESTION:{...}
+    if (msg.startsWith("QUESTION:")) {
+        const json = msg.substring(9);
+        const data = JSON.parse(json);
+
+        document.getElementById("question").innerHTML =
+            data.categorie + " : <br><br>" + data.question;
+
         resetBuzzersAnimations();
         stopTimer();
         timerDiv.style.background = "#ffffff";
         timeLeft = 20;
         timerDiv.textContent = timeLeft;
-        //restartTimer();
-        
-    });
-    
-    socket.on("players", data => {
-        console.log("Message reçu :", data);
-        players=data;
+        return;
+    }
+
+    // PLAYERS:[...]
+    if (msg.startsWith("PLAYERS:")) {
+        players = JSON.parse(msg.substring(8));
         changeName();
-    });
-    
-    socket.on("timer", data => {
-        console.log("Message reçu :", data);
-    });
-    
-    socket.on("start", data => {
-        console.log("start reçu :", data);
-        startTimer();
-    });
-
-    socket.on("winner", data => {
-        console.log("Message reçu :", data-1);
-        buzz(data-1);
-    });
-    
-    socket.on("restartTimer", data => {
-        console.log("Message reçu :", data);
-        restartTimer();
-    });
-    
-    function changeName(){
-        document.getElementById("j1").innerHTML = players[0];
-        document.getElementById("j2").innerHTML = players[1];
-        document.getElementById("j3").innerHTML = players[2];
-        document.getElementById("j4").innerHTML = players[3];
-        document.getElementById("j5").innerHTML = players[4];
+        return;
     }
 
-    function buzz(playerIndex) {
-        const buzzers = document.querySelectorAll(".buzzer");
-        const buzzer = buzzers[playerIndex];
-        stopTimer();
-        // Animation rebond Wii
-        buzzer.classList.remove("bounce");
-        void buzzer.offsetWidth; // reset animation
-        buzzer.classList.add("bounce");
-        setWinner(playerIndex);
+    // USERQ:[...]
+    if (msg.startsWith("USERQ:")) {
+        // si tu veux les afficher
+        return;
     }
 
-    function resetBuzzersAnimations() {
-        const buzzers = document.querySelectorAll(".buzzer");
-        buzzers.forEach(b => {
-            b.classList.remove("bounce");
-            b.classList.remove("winner");
-            b.classList.remove("active");
-        });
-    }
-
-    function setWinner(playerIndex) {
-        const buzzers = document.querySelectorAll(".buzzer");
-        // On enlève le clignotement partout
-        buzzers.forEach(b => b.classList.remove("winner"));
-        // On active le clignotement sur le gagnant
-        buzzers[playerIndex].classList.add("winner");
-    }
-
-
-    function restartTimer() {
+    // RESTART
+    if (msg === "RESTART") {
         resetBuzzersAnimations();
         startTimer();
+        return;
     }
 
-    function stopTimer() {
-        if (timerInterval !== null) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-    } 
+    // RESTART_TIMER
+    if (msg === "RESTART_TIMER") {
+        restartTimer();
+        return;
+    }
 
-    function startTimer() {
+    // TIMER:xx
+    if (msg.startsWith("TIMER:")) {
+        console.log("Timer reçu :", msg);
+        return;
+    }
+};
+
+// ----------------------
+// Envoi WebSocket
+// ----------------------
+function send(msg) {
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(msg);
+    }
+}
+
+// ----------------------
+// Fonctions existantes
+// ----------------------
+
+function changeName(){
+    document.getElementById("j1").innerHTML = players[0];
+    document.getElementById("j2").innerHTML = players[1];
+    document.getElementById("j3").innerHTML = players[2];
+    document.getElementById("j4").innerHTML = players[3];
+    document.getElementById("j5").innerHTML = players[4];
+}
+
+function buzz(playerIndex) {
+    const buzzers = document.querySelectorAll(".buzzer");
+    const buzzer = buzzers[playerIndex];
+    stopTimer();
+
+    buzzer.classList.remove("bounce");
+    void buzzer.offsetWidth;
+    buzzer.classList.add("bounce");
+
+    setWinner(playerIndex);
+}
+
+function resetBuzzersAnimations() {
+    const buzzers = document.querySelectorAll(".buzzer");
+    buzzers.forEach(b => {
+        b.classList.remove("bounce");
+        b.classList.remove("winner");
+        b.classList.remove("active");
+    });
+}
+
+function setWinner(playerIndex) {
+    const buzzers = document.querySelectorAll(".buzzer");
+    buzzers.forEach(b => b.classList.remove("winner"));
+    buzzers[playerIndex].classList.add("winner");
+}
+
+function restartTimer() {
+    resetBuzzersAnimations();
+    startTimer();
+}
+
+function stopTimer() {
+    if (timerInterval !== null) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function startTimer() {
+    timerDiv.textContent = timeLeft;
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
         timerDiv.textContent = timeLeft;
-        //socket.emit("timer", timeLeft);
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            timerDiv.textContent = timeLeft;
-            socket.emit("timer", timeLeft);
-            if (timeLeft <= 0) {
-                stopTimer();
-                timerDiv.textContent = "FIN";
-                timerDiv.style.background = "#ffb3b3";
-            }
-        }, 1000);
-    }
 
-    
+        send("TIMER:" + timeLeft);
+
+        if (timeLeft <= 0) {
+            stopTimer();
+            timerDiv.textContent = "FIN";
+            timerDiv.style.background = "#ffb3b3";
+        }
+    }, 1000);
+}
+
 </script>
+
 
 </body>
 </html>

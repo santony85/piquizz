@@ -141,27 +141,25 @@
 		 <div class="buzzer yellow" onclick="sendForm()">Nouveau</div>
 		 <div class="buzzer red" onclick="anim('next')">Annuler</div>
 	   
-<script src="/socket.io/socket.io.js"></script>
-
-
 <script>
+			 // Connexion WebSocket
+			 const socket = new WebSocket("ws://piquizz.local:3000");
+		 
+			 socket.onopen = () => {
+				 console.log("WS connecté (newpart)");
+			 };
+		 
+			 socket.onmessage = (event) => {
+				 console.log("WS reçu :", event.data);
+				 // Ici tu peux gérer des messages si un jour tu veux
+			 };
+		 
+			 // Fonction pour envoyer le formulaire
+			 function sendForm() {
+				 document.getElementById("myForm").submit();
+			 }
+		 </script>
 
-	const socket = io("http://piquizz.local:3000");
-
-	let timeLeft = 20;
-	let timerInterval = null;
-
-	const timerDiv = document.getElementById("timer");
- 
- 
- function sendForm() { document.getElementById("myForm").submit(); }
-
-
-
-
-
-
-</script>
 
 </body>
 </html>
