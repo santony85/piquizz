@@ -116,6 +116,7 @@ wss.on("connection", (ws, req) => {
     // ANIM:NEXT
     if (msg === "ANIM:NEXT") {
       isFirst = false;
+      isStart = false;
       question = getRandomQuestion();
       broadcast(`QUESTION:${JSON.stringify(question)}`);
       broadcast("RESTART");
@@ -144,6 +145,8 @@ wss.on("connection", (ws, req) => {
 
     // TIMER:xxx
     if (msg.startsWith("TIMER:")) {
+      console.log(msg);
+      if(msg === "TIMER:0")isStart = false;
       broadcast(msg); // on rebroadcast tel quel
       return;
     }
